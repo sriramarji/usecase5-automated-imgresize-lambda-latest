@@ -1,5 +1,5 @@
 variable "lambda_function_name" {
-    description "lambda function name"
+    description = "lambda function name"
     type = string
 }
 variable "image_bucket_name" {}
