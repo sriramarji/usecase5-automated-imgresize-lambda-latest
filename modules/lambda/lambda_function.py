@@ -1,48 +1,24 @@
-const AWS = require('aws-sdk');
-const sharp = require('sharp');  // Image processing library for resizing
-const s3 = new AWS.S3();
-const sns = new AWS.SNS();
+import os
+import boto3
+from PIL import Image
+from io import BytesIO
 
-const bucketName = process.env.S3_BUCKET_NAME;
-const snsTopicArn = process.env.SNS_TOPIC_ARN;
+s3 = boto3.client('s3')
+sns = boto3.client('sns')
 
-exports.handler = async (event) => {
-  const bucket = event.Records[0].s3.bucket.name;
-  const key = event.Records[0].s3.object.key;
+source_bucket = os.environ['SOURCE_BUCKET']
+destination_bucket = os.environ['DESTINATION_BUCKET']
+sns_topic_arn = os.environ['SNS_TOPIC_ARN']
 
-  try {
-    // Fetch the image from S3
-    const originalImage = await s3.getObject({ Bucket: bucket, Key: key }).promise();
-
-    // Resize the image using sharp (800x600 pixels)
-    const resizedImage = await sharp(originalImage.Body)
-      .resize(800, 600)
-      .toBuffer();
-
-    // Define the new key for the resized image
-    const resizedKey = key.replace('input/', 'output/');
-
-    // Upload the resized image to S3
-    await s3.putObject({
-      Bucket: bucket,
-      Key: resizedKey,
-      Body: resizedImage,
-      ContentType: 'image/jpeg',  // You can change this depending on your image type
-    }).promise();
-
-    // Send SNS notification
-    await sns.publish({
-      Message: `Image ${key} has been resized and saved as ${resizedKey}`,
-      Subject: 'Image Processing Completed',
-      TopicArn: snsTopicArn,
-    }).promise();
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify('Image processed successfully!'),
-    };
-  } catch (err) {
-    console.error('Error processing image:', err);
-    throw new Error('Error processing image');
-  }
-};
+def lambda_handler(event, context):
+    for record in event['Records']:
+        key = record['s3']['object']['key']
+        response = s3.get_object(Bucket=source_bucket, Key=key)
+        image_data = response['Body'].read()
+        image = Image.open(BytesIO(image_data))
+        image = image.resize((800, 600))  # Example resize
+        buffer = BytesIO()
+        image.save(buffer, format='JPEG')
+        buffer.seek(0)
+        s3.put_object(Bucket=destination_bucket, Key=f"resized/{key}", Body=buffer)
+        sns.publish(TopicArn=sns_topic_arn, Message=f"Image {key} has been resized and uploaded.")

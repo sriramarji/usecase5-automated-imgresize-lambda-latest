@@ -1,4 +1,4 @@
-variable "image_bucket_name" {
+variable "source_bucket_name" {
   type        = string
   description = "Bucket to store and process uploaded images"
 }
@@ -8,7 +8,3 @@ variable "destination_bucket_name" {
   type        = string
 }
 
-variable "lambda_bucket_name" {
-  type        = string
-  description = "Bucket to store Lambda ZIP files"
-}

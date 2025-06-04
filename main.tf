@@ -1,39 +1,26 @@
-# main.tf
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
 }
 
-module "lambda" {
-  source = "./modules/lambda"
-  lambda_function_name = var.lambda_function_name
-  lambda_code_bucket   = module.s3.lambda_bucket_name
-  lambda_code_key      = var.lambda_code_key
-  image_bucket_name    = module.s3.image_bucket_name
-  image_bucket_arn     = module.s3.image_bucket_arn
-  sns_topic_arn        = module.sns.topic_arn
-}
-
-module "s3" {
+module "s3_buckets" {
   source = "./modules/s3"
-  image_bucket_name   = var.image_bucket_name
-  lambda_bucket_name  = var.lambda_bucket_name
+  source_bucket_name      = var.source_bucket_name
+  destination_bucket_name = var.destination_bucket_name
 }
 
-module "sns" {
+module "sns_topic" {
   source = "./modules/sns"
-  topic_name = var.topic_name
-  email      = var.notification_email
+  topic_name = var.sns_topic_name
 }
 
-resource "aws_s3_bucket_object" "lambda_trigger" {
-  bucket = aws_s3_bucket.image_processing_bucket.bucket
-  key    = "images/input/"
-
-  notification {
-    lambda_function {
-      events = ["s3:ObjectCreated:*"]
-      filter_prefix = "images/input/"
-      lambda_function_arn = aws_lambda_function.image_processing.arn
-    }
-  }
+module "lambda_function" {
+  source = "./modules/lambda"
+  function_name        = var.lambda_function_name
+  handler              = "image-resizer.lambda_handler"
+  runtime              = "python3.9"
+  source_path          = "${path.module}/lambda/image-resizer.py"
+  source_bucket_name   = module.s3_buckets.source_bucket_name
+  destination_bucket_name = module.s3_buckets.destination_bucket_name
+  sns_topic_arn        = module.sns_topic.topic_arn
+  s3_bucket_arn        = module.s3_buckets.source_bucket_arn
 }
