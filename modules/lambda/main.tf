@@ -75,6 +75,7 @@ resource "aws_lambda_function" "image_resizer" {
       DESTINATION_BUCKET  = var.destination_bucket_name
       SNS_TOPIC_ARN       = var.sns_topic_arn
     }
+  }
 }
 
 data "archive_file" "lambda_zip" {
