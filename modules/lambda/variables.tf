@@ -8,4 +8,5 @@ variable "destination_bucket_name" {}
 variable "sns_topic_arn" {}
 variable "handler" {}
 variable "runtime" {}
+variable "source_bucket_name" {}
 
