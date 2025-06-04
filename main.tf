@@ -16,7 +16,7 @@ module "sns_topic" {
 
 module "lambda_function" {
   source = "./modules/lambda"
-  lambda_function_name = var.lambda_function_name
+  function_name        = var.lambda_function_name
   handler              = "image-resizer.lambda_handler"
   runtime              = "python3.9"
   source_path          = "${path.module}/lambda/image-resizer.py"

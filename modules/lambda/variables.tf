@@ -1,4 +1,4 @@
-variable "lambda_function_name" {
+variable "function_name" {
     description = "lambda function name"
     type = string
 }
