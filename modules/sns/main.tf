@@ -1,4 +1,4 @@
-# sns.tf
+# modules/sns/main.tf
 resource "aws_sns_topic" "image_processing_topic" {
   name = "image-processing-topic"
 }

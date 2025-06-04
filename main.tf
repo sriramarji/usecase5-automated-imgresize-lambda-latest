@@ -1,20 +1,20 @@
+# main.tf
 provider "aws" {
   region = "us-east-1"
 }
 
 module "lambda" {
-  source = "./lambda"
+  source = "./modules/lambda"
 }
 
 module "s3" {
-  source = "./s3"
+  source = "./modules/s3"
 }
 
 module "sns" {
-  source = "./sns"
+  source = "./modules/sns"
 }
 
-# Trigger the Lambda function when an image is uploaded to S3
 resource "aws_s3_bucket_object" "lambda_trigger" {
   bucket = aws_s3_bucket.image_processing_bucket.bucket
   key    = "images/input/"

@@ -1,12 +1,12 @@
-# lambda.tf
+# modules/lambda/main.tf
 resource "aws_lambda_function" "image_processing" {
   function_name = "image-processing-function"
 
-  s3_bucket = aws_s3_bucket.image_processing_bucket.bucket
+  s3_bucket = aws_s3_bucket.lambda_code_bucket.bucket
   s3_key    = "lambda_code.zip"
 
-  runtime = "python3.8"
-  handler = "lambda_function.lambda_handler"
+  runtime = "nodejs14.x"
+  handler = "lambda_function.handler"
 
   environment {
     variables = {
@@ -15,7 +15,6 @@ resource "aws_lambda_function" "image_processing" {
     }
   }
 
-  # IAM Role for Lambda Function
   role = aws_iam_role.lambda_execution_role.arn
 }
 

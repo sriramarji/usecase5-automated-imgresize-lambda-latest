@@ -1,46 +1,48 @@
-import json
-import boto3
-from PIL import Image
-import os
-from io import BytesIO
+const AWS = require('aws-sdk');
+const sharp = require('sharp');  // Image processing library for resizing
+const s3 = new AWS.S3();
+const sns = new AWS.SNS();
 
-s3_client = boto3.client('s3')
-sns_client = boto3.client('sns')
+const bucketName = process.env.S3_BUCKET_NAME;
+const snsTopicArn = process.env.SNS_TOPIC_ARN;
 
-def lambda_handler(event, context):
-    # Get the bucket and object key from the event
-    bucket_name = event['Records'][0]['s3']['bucket']['name']
-    object_key = event['Records'][0]['s3']['object']['key']
-    
-    # Get the image file from S3
-    image_object = s3_client.get_object(Bucket=bucket_name, Key=object_key)
-    image_data = image_object['Body'].read()
+exports.handler = async (event) => {
+  const bucket = event.Records[0].s3.bucket.name;
+  const key = event.Records[0].s3.object.key;
 
-    # Open the image using PIL
-    image = Image.open(BytesIO(image_data))
+  try {
+    // Fetch the image from S3
+    const originalImage = await s3.getObject({ Bucket: bucket, Key: key }).promise();
 
-    # Resize the image (example: resize to 800x600)
-    image = image.resize((800, 600))
+    // Resize the image using sharp (800x600 pixels)
+    const resizedImage = await sharp(originalImage.Body)
+      .resize(800, 600)
+      .toBuffer();
 
-    # Save resized image to a BytesIO object
-    resized_image_io = BytesIO()
-    image.save(resized_image_io, format='JPEG')
-    resized_image_io.seek(0)
+    // Define the new key for the resized image
+    const resizedKey = key.replace('input/', 'output/');
 
-    # Define the key for the resized image
-    resized_image_key = object_key.replace('input/', 'output/')
+    // Upload the resized image to S3
+    await s3.putObject({
+      Bucket: bucket,
+      Key: resizedKey,
+      Body: resizedImage,
+      ContentType: 'image/jpeg',  // You can change this depending on your image type
+    }).promise();
 
-    # Upload the resized image back to S3
-    s3_client.put_object(Bucket=bucket_name, Key=resized_image_key, Body=resized_image_io)
-
-    # Send a notification via SNS
-    sns_client.publish(
-        TopicArn=os.environ['SNS_TOPIC_ARN'],
-        Message=f"Image {object_key} has been resized and uploaded to {resized_image_key}",
-        Subject="Image Processing Completed"
-    )
+    // Send SNS notification
+    await sns.publish({
+      Message: `Image ${key} has been resized and saved as ${resizedKey}`,
+      Subject: 'Image Processing Completed',
+      TopicArn: snsTopicArn,
+    }).promise();
 
     return {
-        'statusCode': 200,
-        'body': json.dumps('Image processing complete!')
-    }
+      statusCode: 200,
+      body: JSON.stringify('Image processed successfully!'),
+    };
+  } catch (err) {
+    console.error('Error processing image:', err);
+    throw new Error('Error processing image');
+  }
+};
