@@ -68,6 +68,13 @@ resource "aws_lambda_function" "image_resizer" {
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
   layers = [aws_lambda_layer_version.pillow.arn]
+
+  environment {
+    variables = {
+      SOURCE_BUCKET       = var.source_bucket_name
+      DESTINATION_BUCKET  = var.destination_bucket_name
+      SNS_TOPIC_ARN       = var.sns_topic_arn
+    }
 }
 
 data "archive_file" "lambda_zip" {
