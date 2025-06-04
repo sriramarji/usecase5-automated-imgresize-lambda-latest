@@ -20,6 +20,7 @@ module "lambda_function" {
   handler              = "image-resizer.lambda_handler"
   runtime              = "python3.9"
   source_path          = "${path.module}/lambda/image-resizer.py"
+  pillow_layer_zip     = "${path.module}/pillow-layer.zip"
   source_bucket_name   = module.s3_buckets.source_bucket_name
   destination_bucket_name = module.s3_buckets.destination_bucket_name
   sns_topic_arn        = module.sns_topic.topic_arn

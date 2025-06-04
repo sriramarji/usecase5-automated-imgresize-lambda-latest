@@ -53,6 +53,12 @@ resource "aws_iam_role_policy_attachment" "lambda_attach" {
   policy_arn = aws_iam_policy.lambda_policy.arn
 }
 
+resource "aws_lambda_layer_version" "pillow" {
+  filename            = var.pillow_layer_zip
+  layer_name          = "pillow"
+  compatible_runtimes = ["python3.9"]
+}
+
 resource "aws_lambda_function" "image_resizer" {
   function_name = var.function_name
   role          = aws_iam_role.lambda_exec.arn
@@ -60,6 +66,8 @@ resource "aws_lambda_function" "image_resizer" {
   runtime       = var.runtime
   filename      = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+
+  layers = [ aws_lambda_layer_version.pillow.arn ]
 }
 
 data "archive_file" "lambda_zip" {
