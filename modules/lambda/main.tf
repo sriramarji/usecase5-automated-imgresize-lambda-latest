@@ -1,8 +1,8 @@
 # modules/lambda/main.tf
 resource "aws_lambda_function" "image_processing" {
-  function_name = "image-processing-function"
+  function_name = var.lambda_function_name
 
-  s3_bucket = aws_s3_bucket.lambda_code_bucket.bucket
+  s3_bucket = var.lambda_code_bucket
   s3_key    = "lambda_code.zip"
 
   runtime = "nodejs14.x"
@@ -10,8 +10,8 @@ resource "aws_lambda_function" "image_processing" {
 
   environment {
     variables = {
-      S3_BUCKET_NAME = aws_s3_bucket.image_processing_bucket.bucket
-      SNS_TOPIC_ARN  = aws_sns_topic.image_processing_topic.arn
+      S3_BUCKET_NAME = var.image_bucket_name
+      SNS_TOPIC_ARN  = var.sns_topic_arn
     }
   }
 
@@ -47,12 +47,12 @@ resource "aws_iam_role_policy" "lambda_execution_policy" {
           "s3:PutObject"
         ]
         Effect   = "Allow"
-        Resource = "${aws_s3_bucket.image_processing_bucket.arn}/*"
+        Resource = "${var.image_bucket_arn}/*"
       },
       {
         Action   = "sns:Publish"
         Effect   = "Allow"
-        Resource = aws_sns_topic.image_processing_topic.arn
+        Resource = var.sns_topic_arn
       }
     ]
   })

@@ -1,10 +1,6 @@
 # modules/s3/main.tf
 resource "aws_s3_bucket" "image_processing_bucket" {
-  bucket = "image-processing-bucket"
-
-  lifecycle {
-    prevent_destroy = true
-  }
+  bucket = var.image_bucket_name
 
   versioning {
     enabled = true
@@ -16,8 +12,22 @@ resource "aws_s3_bucket" "image_processing_bucket" {
   }
 }
 
+resource "aws_s3_bucket" "destination_bucket" {
+  bucket = var.destination_bucket_name
+
+  versioning {
+    enabled = true
+  }
+
+  tags = {
+    Name = var.destination_bucket_name
+    Type = "Image Destination"
+  }
+}
+
+
 resource "aws_s3_bucket" "lambda_code_bucket" {
-  bucket = "lambda-code-bucket"
+  bucket = var.lambda_bucket_name
 
   versioning {
     enabled = true
