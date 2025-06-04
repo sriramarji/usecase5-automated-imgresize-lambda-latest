@@ -67,7 +67,7 @@ resource "aws_lambda_function" "image_resizer" {
   filename      = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
-  layers = [ aws_lambda_layer_version.pillow.arn ]
+  layers = [aws_lambda_layer_version.pillow.arn]
 }
 
 data "archive_file" "lambda_zip" {
