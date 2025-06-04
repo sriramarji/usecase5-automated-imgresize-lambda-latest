@@ -11,6 +11,7 @@ module "s3_buckets" {
 module "sns_topic" {
   source = "./modules/sns"
   topic_name = var.sns_topic_name
+  notification_email = var.notification_email
 }
 
 module "lambda_function" {
