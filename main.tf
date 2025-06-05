@@ -1,29 +1,28 @@
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
 }
 
-module "lambda" {
-  source = "./lambda"
+module "s3_buckets" {
+  source = "./modules/s3"
+  source_bucket_name      = var.source_bucket_name
+  destination_bucket_name = var.destination_bucket_name
 }
 
-module "s3" {
-  source = "./s3"
+module "sns_topic" {
+  source = "./modules/sns"
+  topic_name = var.sns_topic_name
+  notification_email = var.notification_email
 }
 
-module "sns" {
-  source = "./sns"
-}
-
-# Trigger the Lambda function when an image is uploaded to S3
-resource "aws_s3_bucket_object" "lambda_trigger" {
-  bucket = aws_s3_bucket.image_processing_bucket.bucket
-  key    = "images/input/"
-
-  notification {
-    lambda_function {
-      events = ["s3:ObjectCreated:*"]
-      filter_prefix = "images/input/"
-      lambda_function_arn = aws_lambda_function.image_processing.arn
-    }
-  }
+module "lambda_function" {
+  source = "./modules/lambda"
+  function_name        = var.lambda_function_name
+  handler              = "image-resizer.lambda_handler"
+  runtime              = "python3.9"
+  source_path          = "${path.module}/lambda/image-resizer.py"
+  pillow_layer_zip     = "${path.module}/pillow-layer.zip"
+  source_bucket_name   = module.s3_buckets.source_bucket_name
+  destination_bucket_name = module.s3_buckets.destination_bucket_name
+  sns_topic_arn        = module.sns_topic.topic_arn
+  s3_bucket_arn        = module.s3_buckets.source_bucket_arn
 }

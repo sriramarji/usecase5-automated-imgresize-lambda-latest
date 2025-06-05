@@ -1,17 +1,21 @@
-# s3.tf
-resource "aws_s3_bucket" "image_processing_bucket" {
-  bucket = "image-processing-bucket"
-
-  lifecycle {
-    prevent_destroy = true
-  }
+resource "aws_s3_bucket" "source" {
+  bucket = "${var.source_bucket_name}-${random_pet.this.id}"
 
   versioning {
     enabled = true
   }
 
-  tags = {
-    Name        = "image-processing-bucket"
-    Environment = "Production"
+}
+
+resource "aws_s3_bucket" "destination" {
+  bucket = "${var.destination_bucket_name}-${random_pet.this.id}"
+
+  versioning {
+    enabled = true
   }
 }
+
+resource "random_pet" "this" {
+  length = 2
+}
+
