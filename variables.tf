@@ -5,12 +5,12 @@ variable "aws_region" {
 
 variable "source_bucket_name" {
   description = "Name of the source S3 bucket"
-  default     = "image-non-sized-1"
+  default     = "image-non-sized-123"
 }
 
 variable "destination_bucket_name" {
   description = "Name of the destination S3 bucket"
-  default     = "image-sized-1"
+  default     = "image-sized-123"
 }
 
 variable "sns_topic_name" {
@@ -25,5 +25,5 @@ variable "lambda_function_name" {
 
 variable "notification_email" {
   description = "Notification email for SNS topic"
-  default     = "niyaz.hasanmohamed@hcltech.com"  # Replace with your email
+  default     = "bhaskarsaisri.arji@hcltech.com"  # Replace with your email
 }
